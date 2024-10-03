@@ -404,8 +404,6 @@ async def send_manga_chapter(client: Client, chapter, chat_id):
         f'{chapter.get_url()}'
     ])
 
-    success_caption = f'{chapter.manga.name} - {chapter.name}\n'
-
     download = not chapter_file
     download = download or options & OutputOptions.PDF and not chapter_file.file_id
     download = download or options & OutputOptions.CBZ and not chapter_file.cbz_id
@@ -421,7 +419,7 @@ async def send_manga_chapter(client: Client, chapter, chat_id):
 
     chapter_file = chapter_file or ChapterFile(url=chapter.url)
 
-    success_caption += f'[Read on website]({chapter.get_url()})'
+    #success_caption += f'[Read on website]({chapter.get_url()})'
 
     if env_vars["FNAME"]:
         try:
@@ -435,7 +433,8 @@ async def send_manga_chapter(client: Client, chapter, chat_id):
             print(e)
     else:
         ch_name = clean(f'{chapter.name} - {clean(chapter.manga.name, 25)}', 45)
-
+        
+    success_caption = f'<b>{ch_name}</b>'
     media_docs = []
 
     if options & OutputOptions.PDF:
