@@ -14,7 +14,7 @@ env_vars = {
   # {chap_num}: Chapter Number
   # {chap_name} : Manga Name
   # Ex : Chapter {chap_num} {chap_name} @Manhwa_Arena
-  "FNAME": "[{chap_num}] [MG] {chap_name} [@Manga_Galaxy]"
+  "FNAME": "<blockquote>[{chap_num}] [MG] {chap_name} [@Manga_Galaxy]</blockquote>"
 }
 
 dbname = env_vars.get('DATABASE_URL_PRIMARY') or env_vars.get('DATABASE_URL') or 'sqlite:///test.db'
