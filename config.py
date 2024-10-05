@@ -8,7 +8,7 @@ env_vars = {
   # Get For tembo.io
   "DATABASE_URL_PRIMARY": "postgresql://postgres:tTvmOOxCA4TBnFOR@ashamedly-large-feline.data-1.use1.tembo.io:5432/postgres",
   # Logs Channel Username Without @
-  "CACHE_CHANNEL": "-1002231355848",
+  "CACHE_CHANNEL": "-1002198538597",
   # Force Subs Channel username without @
   "CHANNEL": "Manga_Yugen",
   # {chap_num}: Chapter Number
