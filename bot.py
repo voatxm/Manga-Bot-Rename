@@ -427,6 +427,10 @@ async def send_manga_chapter(client: Client, chapter, chat_id):
             except: chap_num = re.search(r"(\d+(?:\.\d+)?)", chapter.name).group(1)
             chap_name = clean(chapter.manga.name, 20)
             ch_name = env_vars["FNAME"]
+            if chap_num < 10:
+                ch_name = ch_name.replace(chap_num, ("00" + str(chap_num)))
+            elif chap_num < 100:
+                ch_name = ch_name.replace(chap_num, ("0" + str(chap_num)))
             ch_name = ch_name.replace("{chap_num}", str(chap_num))
             ch_name = ch_name.replace("{chap_name}", str(chap_name))
         except Exception as e:
