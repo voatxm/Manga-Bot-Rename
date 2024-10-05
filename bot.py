@@ -436,6 +436,7 @@ async def send_manga_chapter(client: Client, chapter, chat_id):
         ch_name = clean(f'{chapter.name} - {clean(chapter.manga.name, 25)}', 45)
         
     success_caption = f'<blockquote><b>{ch_name}</b></blockquote>'
+    ch_name = re.sub(r'(\d+)', lambda x: f"{int(x.group()):03}", ch_name, count=1)
     media_docs = []
 
     if options & OutputOptions.PDF:
