@@ -8,8 +8,6 @@ def fld2cbz(folder: Path, name: str):
     cbz = folder / f'{name}.cbz'
     files = [file for file in folder.glob(r'*') if re.match(r'.*\.(jpg|png|jpeg|webp)', file.name)]
     files.sort(key=lambda x: x.name)
-    files.insert(0, "first.jpg")
-    files.append("last.jpg")
     img2cbz(files, cbz)
     return cbz
 
