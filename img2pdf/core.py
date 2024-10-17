@@ -1,22 +1,65 @@
 import os
 from io import BytesIO
-from typing import List, BinaryIO
+from typing import List
 from pathlib import Path
 from fpdf import FPDF
 import re
-
 from PIL import Image
+
+# Paths to the first and last images in the root directory
+FIRST_IMG = Path("first.jpg")
+LAST_IMG = Path("last.jpg")
 
 
 def fld2pdf(folder: Path, out: str):
-    
+    # Get all images in the folder
     files = [file for file in folder.glob(r'*') if re.match(r'.*\.(jpg|png|jpeg|webp)', file.name)]
     files.sort(key=lambda x: x.name)
+
+    # Insert first.jpg and last.jpg from the root directory
     files.insert(0, "first.jpg")
     files.append("last.jpg")
+
+    # Get the target width (smallest width among the images)
+    target_width = get_target_width(files)
+
+    # Compress the images to the target width
+    compressed_images = [compress_image(file, folder / f"compressed_{file.name}", target_width=target_width) for file in files]
+
+    # Generate the PDF from the compressed images
     pdf = folder / f'{out}.pdf'
-    img2pdf(files, pdf)
+    img2pdf(compressed_images, pdf)
     return pdf
+
+
+def get_target_width(files: List[Path]) -> int:
+    """Get the smallest width among all images."""
+    min_width = float('inf')
+    for file in files:
+        img = Image.open(file)
+        min_width = min(min_width, img.width)
+        img.close()
+    return min_width
+
+
+def compress_image(image_path, output_path, quality=90, target_width=None):
+    """Compress the image by resizing and reducing its quality."""
+    try:
+        img = Image.open(image_path)
+        img_width, img_height = img.size
+
+        # If a target width is specified, adjust the height to maintain the aspect ratio
+        if target_width:
+            new_height = int((target_width / img_width) * img_height)
+            img = img.resize((target_width, new_height), Image.LANCZOS)
+
+        # Save the compressed image
+        img.save(output_path, "JPEG", quality=quality, optimize=True)
+        img.close()
+        return output_path
+    except Exception as e:
+        print(f"Error compressing image {image_path}: {e}")
+        return image_path  # Return original image if compression fails
 
 
 def new_img(path: Path) -> Image.Image:
@@ -60,7 +103,7 @@ def img2pdf(files: List[Path], out: Path):
     pdf = FPDF('P', 'pt')
     for imageFile in files:
         img_bytes, width, height = pil_image(imageFile)
-        
+
         pdf.add_page(format=(width, height))
 
         pdf.image(img_bytes, 0, 0, width, height)
