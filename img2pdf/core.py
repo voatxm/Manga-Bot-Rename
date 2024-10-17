@@ -121,10 +121,17 @@ def unicode_to_latin1(s):
     s = s.encode('latin1', 'replace').decode('latin1')
     return s
 
+from fpdf import FPDF
+from io import BytesIO
+from pathlib import Path
+from typing import List
+from PIL import Image
+
 def img2pdf(files: List[Path], out: Path):
     pdf = FPDF('P', 'pt')
     for imageFile in files:
-        #Convert image to BytesIO and get its width and height
+        try:  # Start of the try block
+            # Convert image to BytesIO and get its width and height
             img_bytes, width, height = pil_image(imageFile)
 
             # Log the image size and file being processed
@@ -139,7 +146,7 @@ def img2pdf(files: List[Path], out: Path):
             # Close the image file after use
             img_bytes.close()
 
-        except Exception as e:
+        except Exception as e:  # Corresponding except block
             # Log the error and continue with the next image
             print(f"Error processing {imageFile.name}: {str(e)}")
             continue
@@ -150,7 +157,6 @@ def img2pdf(files: List[Path], out: Path):
     # Output the final PDF
     pdf.output(out, "F")
     print(f"PDF created successfully at: {out}")
-
 def fld2thumb(folder: Path):
     try:
         files = [file for file in folder.glob(r'*') if re.match(r'.*\.(jpg|png|jpeg|webp)', file.name)]
