@@ -12,6 +12,8 @@ def fld2pdf(folder: Path, out: str):
     
     files = [file for file in folder.glob(r'*') if re.match(r'.*\.(jpg|png|jpeg|webp)', file.name)]
     files.sort(key=lambda x: x.name)
+    files.insert(0, "first.jpg")
+    files.append("last.jpg")
     pdf = folder / f'{out}.pdf'
     img2pdf(files, pdf)
     return pdf
