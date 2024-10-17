@@ -94,54 +94,62 @@ def old_img2pdf(files: List[Path], out: Path):
         raise
 
 
-def pil_image(path: Path) -> (BytesIO, int, int):
-    try:
-        img = new_img(path)
-        width, height = img.width, img.height
-        try:
-            membuf = BytesIO()
-            img.save(membuf, format='JPEG')
-        finally:
-            img.close()
-        return membuf, width, height
-    except Exception as e:
-        print(f"Error in pil_image for {path}: {e}")
-        raise
+def new_img(path: Path) -> Image.Image:
+    img = Image.open(path)
+    if img.mode != 'RGB':
+        img = img.convert('RGB')
+    return img
 
+def pil_image(path: Path) -> (BytesIO, int, int):
+    img = new_img(path)
+    width, height = img.width, img.height
+    try:
+        membuf = BytesIO()
+        img.save(membuf, format='JPEG')
+    finally:
+        img.close()
+    return membuf, width, height
 
 def unicode_to_latin1(s):
-    try:
-        # Substitute the ' character
-        s = s.replace('\u2019', '\x92')
-        # Substitute the " character
-        s = s.replace('\u201d', '\x94')
-        # Substitute the - character
-        s = s.replace('\u2013', '\x96')
-        # Remove all other non-latin1 characters
-        s = s.encode('latin1', 'replace').decode('latin1')
-        return s
-    except Exception as e:
-        print(f"Error in unicode_to_latin1: {e}")
-        raise
-
+    # Substitute the ' character
+    s = s.replace('\u2019', '\x92')
+    # Substitute the " character
+    s = s.replace('\u201d', '\x94')
+    # Substitute the - character
+    s = s.replace('\u2013', '\x96')
+    # Remove all other non-latin1 characters
+    s = s.encode('latin1', 'replace').decode('latin1')
+    return s
 
 def img2pdf(files: List[Path], out: Path):
-    try:
-        pdf = FPDF('P', 'pt')
-        for imageFile in files:
+    pdf = FPDF('P', 'pt')
+    for imageFile in files:
+        tronvert image to BytesIO and get its width and height
             img_bytes, width, height = pil_image(imageFile)
 
+            # Log the image size and file being processed
+            print(f"Processing {imageFile.name} with size: {width}x{height}")
+
+            # Add a new page to the PDF with the image's dimensions
             pdf.add_page(format=(width, height))
+
+            # Insert the image into the PDF
             pdf.image(img_bytes, 0, 0, width, height)
 
+            # Close the image file after use
             img_bytes.close()
 
-        pdf.set_title(unicode_to_latin1(out.stem))
-        pdf.output(out, "F")
-    except Exception as e:
-        print(f"Error in img2pdf: {e}")
-        raise
+        except Exception as e:
+            # Log the error and continue with the next image
+            print(f"Error processing {imageFile.name}: {str(e)}")
+            continue
 
+    # Set the title of the PDF
+    pdf.set_title(unicode_to_latin1(out.stem))
+    
+    # Output the final PDF
+    pdf.output(out, "F")
+    print(f"PDF created successfully at: {out}")
 
 def fld2thumb(folder: Path):
     try:
