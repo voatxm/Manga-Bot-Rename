@@ -124,7 +124,7 @@ def unicode_to_latin1(s):
 def img2pdf(files: List[Path], out: Path):
     pdf = FPDF('P', 'pt')
     for imageFile in files:
-        tronvert image to BytesIO and get its width and height
+        #Convert image to BytesIO and get its width and height
             img_bytes, width, height = pil_image(imageFile)
 
             # Log the image size and file being processed
