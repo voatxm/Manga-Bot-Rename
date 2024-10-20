@@ -1,8 +1,10 @@
+
 import enum
 import shutil
 from ast import arg
 import asyncio
 import re
+import os
 from dataclasses import dataclass
 import datetime as dt
 import json
@@ -25,6 +27,13 @@ from pagination import Pagination
 from plugins.client import clean
 from tools.aqueue import AQueue
 from tools.flood import retry_on_flood
+
+
+OWNER_ID = 6321064549 # put owner id in number directly 
+auth_users = [7002247408,1394188404,5280269345,7136303059,5005411270,6723435719,6063343021,5469587702,5929480351,1720123638,1864972077,1016442910,6558061813,1895356693] # eg: [83528911,836289,9362891]
+AUTH_USERS = auth_users + [OWNER_ID]
+
+
 
 mangas: Dict[str, MangaCard] = dict()
 chapters: Dict[str, MangaChapter] = dict()
@@ -129,12 +138,15 @@ else:
 
 @bot.on_message(filters=~(filters.private & filters.incoming))
 async def on_chat_or_channel_message(client: Client, message: Message):
+    if message.from_user.id not in AUTH_USERS:
+        return await message.reply_text("You Can't Use Me Buddy' :(")
     pass
-
 
 @bot.on_message()
 async def on_private_message(client: Client, message: Message):
-    channel = env_vars.get('CHANNEL')
+    if message.from_user.id not in AUTH_USERS:
+        return await message.reply_text("You Can't Use Me Buddy' :(")
+    channel = env_vars.get('CHANNEL') 
     if not channel:
         return message.continue_propagation()
     if in_channel_cached := users_in_channel.get(message.from_user.id):
@@ -165,6 +177,8 @@ async def on_private_message(client: Client, message: Message):
 
 @bot.on_message(filters=filters.command(['start']))
 async def on_start(client: Client, message: Message):
+    if message.from_user.id not in AUTH_USERS:
+        return await message.reply_text("You Can't Use Me Buddy' :(")
     logger.info(f"User {message.from_user.id} started the bot")
     await message.reply("Welcome to the best manga pdf bot in telegram!!\n"
                         "\n"
@@ -179,16 +193,22 @@ async def on_start(client: Client, message: Message):
 
 @bot.on_message(filters=filters.command(['help']))
 async def on_help(client: Client, message: Message):
+    if message.from_user.id not in AUTH_USERS:
+        return await message.reply_text("You Can't Use Me Buddy' :(")
     await message.reply(help_msg)
 
 
 @bot.on_message(filters=filters.command(['queue']))
 async def on_help(client: Client, message: Message):
+    if message.from_user.id not in AUTH_USERS:
+        return await message.reply_text("You Can't Use Me Buddy' :(")
     await message.reply(f'Queue size: {pdf_queue.qsize()}')
 
 
 @bot.on_message(filters=filters.command(['refresh']))
 async def on_refresh(client: Client, message: Message):
+    if message.from_user.id not in AUTH_USERS:
+        return await message.reply_text("You Can't Use Me Buddy' :(")
     text = message.reply_to_message.text or message.reply_to_message.caption
     if text:
         regex = re.compile(r'\[Read on telegraph]\((.*)\)')
@@ -212,6 +232,8 @@ async def on_refresh(client: Client, message: Message):
 
 @bot.on_message(filters=filters.command(['subs']))
 async def on_subs(client: Client, message: Message):
+    if message.from_user.id not in AUTH_USERS:
+        return await message.reply_text("You Can't Use Me Buddy' :(")
     db = DB()
 
     filter_ = message.text.split(maxsplit=1)[1] if message.text.split(maxsplit=1)[1:] else ''
@@ -236,6 +258,8 @@ async def on_subs(client: Client, message: Message):
 
 @bot.on_message(filters=filters.regex(r'^/cancel ([^ ]+)$'))
 async def on_cancel_command(client: Client, message: Message):
+    if message.from_user.id not in AUTH_USERS:
+        return await message.reply_text("You Can't Use Me Buddy' :(")
     db = DB()
     sub = await db.get(Subscription, (message.matches[0].group(1), str(message.from_user.id)))
     if not sub:
@@ -246,6 +270,8 @@ async def on_cancel_command(client: Client, message: Message):
 
 @bot.on_message(filters=filters.command(['options']))
 async def on_options_command(client: Client, message: Message):
+    if message.from_user.id not in AUTH_USERS:
+        return await message.reply_text("You Can't Use Me Buddy' :(")
     db = DB()
     user_options = await db.get(MangaOutput, str(message.from_user.id))
     user_options = user_options.output if user_options else (1 << 30) - 1
@@ -255,11 +281,15 @@ async def on_options_command(client: Client, message: Message):
 
 @bot.on_message(filters=filters.regex(r'^/'))
 async def on_unknown_command(client: Client, message: Message):
+    if message.from_user.id not in AUTH_USERS:
+        return await message.reply_text("You Can't Use Me Buddy' :(")
     await message.reply("Unknown command")
 
 
 @bot.on_message(filters=filters.text)
 async def on_message(client, message: Message):
+    if message.from_user.id not in AUTH_USERS:
+        return await message.reply_text("You Can't Use Me Buddy' :(")
     language_query[f"lang_None_{hash(message.text)}"] = (None, message.text)
     for language in plugin_dicts.keys():
         language_query[f"lang_{language}_{hash(message.text)}"] = (language, message.text)
@@ -419,13 +449,11 @@ async def send_manga_chapter(client: Client, chapter, chat_id):
 
     chapter_file = chapter_file or ChapterFile(url=chapter.url)
 
-    #success_caption += f'[Read on website]({chapter.get_url()})'
-
     if env_vars["FNAME"]:
         try:
             try: chap_num = re.search(r"Vol (\d+(?:\.\d+)?) Chapter (\d+(?:\.\d+)?)", chapter.name).group(2)
             except: chap_num = re.search(r"(\d+(?:\.\d+)?)", chapter.name).group(1)
-            chap_name = clean(chapter.manga.name, 20)
+            chap_name = clean(chapter.manga.name, 30)
             ch_name = env_vars["FNAME"]
         
             ch_name = ch_name.replace("{chap_num}", str(chap_num))
@@ -472,6 +500,13 @@ async def send_manga_chapter(client: Client, chapter, chat_id):
         media_docs[-1].caption = success_caption
         messages: list[Message] = await retry_on_flood(client.send_media_group)(chat_id, media_docs)
 
+    channel = env_vars.get('CACHE_CHANNEL')
+
+    for msg in messages:
+        if msg:
+            await msg.copy(channel)
+            await asyncio.sleep(1)
+            
     # Save file ids
     if download and media_docs:
         for message in [x for x in messages if x.document]:
@@ -708,13 +743,12 @@ async def chapter_creation(worker_id: int = 0):
     """
     logger.debug(f"Worker {worker_id}: Starting worker")
     while True:
-        channel = env_vars.get('CACHE_CHANNEL')
         chapter, chat_id = await pdf_queue.get(worker_id)
         logger.debug(f"Worker {worker_id}: Got chapter '{chapter.name}' from queue for user '{chat_id}'")
         try:
             await send_manga_chapter(bot, chapter, chat_id)
-            await send_manga_chapter(bot, chapter, channel)
         except:
             logger.exception(f"Error sending chapter {chapter.name} to user {chat_id}")
         finally:
             pdf_queue.release(chat_id)
+        
